@@ -1,0 +1,909 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="Chave interativa da Copa do Mundo 2026 — preencha os placares do 16-avos à final, com datas e bandeiras. A chave avança sozinha.">
+<meta name="theme-color" content="#0C1512">
+<title>Copa 2026 — Minha Chave</title>
+<style>
+  :root{
+    --bg:#EEF1EC; --surface:#FFFFFF; --surface-2:#F5F7F3;
+    --ink:#14201B; --muted:#5C6B63; --faint:#8A988F;
+    --line:#D9E0D8; --line-strong:#C3CDBF;
+    --gold:#B07E00; --gold-bright:#E9B21E; --gold-soft:#FBF0CF;
+    --shadow:0 1px 2px rgba(20,32,27,.06), 0 8px 24px rgba(20,32,27,.06);
+    --radius:14px;
+  }
+  @media (prefers-color-scheme:dark){
+    :root{
+      --bg:#0C1512; --surface:#12201B; --surface-2:#16271F;
+      --ink:#EAF0EA; --muted:#8CA093; --faint:#5F7267;
+      --line:#213229; --line-strong:#2E4438;
+      --gold:#F2C230; --gold-bright:#FFD65A; --gold-soft:#2A2410;
+      --shadow:0 1px 2px rgba(0,0,0,.4), 0 12px 32px rgba(0,0,0,.35);
+    }
+  }
+  :root[data-theme="light"]{
+    --bg:#EEF1EC; --surface:#FFFFFF; --surface-2:#F5F7F3;
+    --ink:#14201B; --muted:#5C6B63; --faint:#8A988F;
+    --line:#D9E0D8; --line-strong:#C3CDBF;
+    --gold:#B07E00; --gold-bright:#E9B21E; --gold-soft:#FBF0CF;
+    --shadow:0 1px 2px rgba(20,32,27,.06), 0 8px 24px rgba(20,32,27,.06);
+  }
+  :root[data-theme="dark"]{
+    --bg:#0C1512; --surface:#12201B; --surface-2:#16271F;
+    --ink:#EAF0EA; --muted:#8CA093; --faint:#5F7267;
+    --line:#213229; --line-strong:#2E4438;
+    --gold:#F2C230; --gold-bright:#FFD65A; --gold-soft:#2A2410;
+    --shadow:0 1px 2px rgba(0,0,0,.4), 0 12px 32px rgba(0,0,0,.35);
+  }
+
+  *{box-sizing:border-box}
+  html,body{margin:0}
+  body{
+    background:var(--bg); color:var(--ink);
+    font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+    -webkit-font-smoothing:antialiased; line-height:1.4;
+    padding:0 0 64px;
+  }
+  .cond{font-family:"Arial Narrow","Roboto Condensed","Helvetica Neue",system-ui,sans-serif;}
+  .tnum{font-variant-numeric:tabular-nums}
+  button{font-family:inherit;cursor:pointer}
+  :focus-visible{outline:2px solid var(--gold-bright);outline-offset:2px;border-radius:6px}
+
+  /* ---------- header ---------- */
+  header{
+    position:sticky;top:0;z-index:20;
+    background:color-mix(in srgb, var(--bg) 88%, transparent);
+    backdrop-filter:blur(10px);
+    border-bottom:1px solid var(--line);
+  }
+  .head-inner{
+    max-width:1180px;margin:0 auto;padding:14px 20px 12px;
+    display:flex;align-items:center;gap:18px;flex-wrap:wrap;
+  }
+  .brand{display:flex;flex-direction:column;gap:2px;margin-right:auto}
+  .wordmark{
+    font-family:"Arial Narrow","Roboto Condensed","Helvetica Neue",sans-serif;
+    font-weight:700;letter-spacing:.11em;text-transform:uppercase;
+    font-size:clamp(20px,3.4vw,28px);line-height:1;
+    display:flex;align-items:baseline;gap:.4em;
+  }
+  .wordmark b{color:var(--gold)}
+  .tagline{font-size:12px;color:var(--muted);letter-spacing:.02em}
+  .controls{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+  .seg{
+    display:inline-flex;background:var(--surface-2);border:1px solid var(--line);
+    border-radius:999px;padding:3px;gap:2px;
+  }
+  .seg button{
+    border:0;background:transparent;color:var(--muted);
+    padding:7px 16px;border-radius:999px;font-size:13px;font-weight:600;
+    letter-spacing:.04em;text-transform:uppercase;transition:.18s;
+  }
+  .seg button[aria-pressed="true"]{background:var(--surface);color:var(--ink);box-shadow:var(--shadow)}
+  .icon-btn{
+    width:40px;height:40px;border-radius:999px;border:1px solid var(--line);
+    background:var(--surface-2);color:var(--ink);font-size:16px;
+    display:grid;place-items:center;transition:.18s;
+  }
+  .icon-btn:hover{border-color:var(--line-strong)}
+
+  /* ---------- progress strip ---------- */
+  .stage-strip{
+    max-width:1180px;margin:0 auto;padding:14px 20px 0;
+    display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;
+  }
+  .stage-strip::-webkit-scrollbar{display:none}
+  .stage-pill{
+    flex:0 0 auto;display:flex;flex-direction:column;gap:3px;
+    padding:9px 15px;border-radius:12px;border:1px solid var(--line);
+    background:var(--surface);min-width:112px;transition:.2s;
+  }
+  .stage-pill .s-name{
+    font-family:"Arial Narrow","Roboto Condensed",sans-serif;
+    font-weight:700;text-transform:uppercase;letter-spacing:.06em;font-size:15px;
+  }
+  .stage-pill .s-meta{font-size:11.5px;color:var(--muted);display:flex;align-items:center;gap:5px}
+  .stage-pill.active{border-color:var(--gold);box-shadow:0 0 0 1px var(--gold)}
+  .stage-pill.done .s-name{color:var(--muted)}
+  .dotm{width:7px;height:7px;border-radius:99px;background:var(--line-strong)}
+  .stage-pill.active .dotm{background:var(--gold-bright)}
+  .stage-pill.done .dotm{background:var(--gold)}
+  .champ-line{
+    max-width:1180px;margin:14px auto 0;padding:0 20px;
+  }
+
+  main{max-width:1180px;margin:0 auto;padding:22px 20px 0}
+
+  /* ---------- helper note ---------- */
+  .note{
+    display:flex;gap:11px;align-items:flex-start;
+    background:var(--surface);border:1px solid var(--line);border-left:3px solid var(--gold);
+    border-radius:12px;padding:12px 15px;margin-bottom:22px;font-size:13.5px;color:var(--muted);
+  }
+  .note b{color:var(--ink);font-weight:600}
+  .note .x{margin-left:auto;background:none;border:0;color:var(--faint);font-size:18px;line-height:1;padding:0 2px}
+
+  /* ---------- LISTA view ---------- */
+  .round-block{margin-bottom:34px}
+  .round-head{display:flex;align-items:baseline;gap:12px;margin:0 2px 14px}
+  .round-head h2{
+    margin:0;font-family:"Arial Narrow","Roboto Condensed",sans-serif;
+    font-weight:700;text-transform:uppercase;letter-spacing:.05em;
+    font-size:clamp(19px,2.6vw,25px);
+  }
+  .round-head .count{font-size:12.5px;color:var(--muted);font-weight:600;letter-spacing:.03em;text-transform:uppercase}
+  .round-head .badge{
+    font-size:10.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;
+    padding:3px 9px;border-radius:99px;background:var(--gold-soft);color:var(--gold);
+  }
+  .round-head .rule{flex:1;height:1px;background:var(--line)}
+
+  .cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:14px}
+
+  .match{
+    background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);
+    box-shadow:var(--shadow);overflow:hidden;
+  }
+  .m-tag{
+    display:flex;align-items:center;gap:9px;
+    padding:8px 14px 0;font-size:10.5px;letter-spacing:.09em;text-transform:uppercase;
+    color:var(--faint);font-weight:600;
+  }
+  .m-tag .state{display:flex;align-items:center;gap:5px;margin-left:auto}
+  .datein{
+    font-family:inherit;font-size:10.5px;font-weight:600;letter-spacing:.03em;
+    color:var(--muted);border:1px solid transparent;background:transparent;
+    border-radius:6px;padding:1px 4px;cursor:pointer;color-scheme:light dark;
+    text-transform:none;max-width:118px;
+  }
+  .datein:hover{border-color:var(--line-strong);color:var(--ink)}
+  .datein:focus{border-color:var(--gold-bright);color:var(--ink)}
+  .bdate{
+    font-size:9.5px;letter-spacing:.05em;text-transform:uppercase;color:var(--faint);
+    text-align:center;padding:4px 0 1px;font-weight:600;
+  }
+  .m-tag .state.decided{color:var(--gold)}
+  .row{
+    display:flex;align-items:center;gap:11px;padding:11px 14px;position:relative;
+  }
+  .row + .row{border-top:1px solid var(--line)}
+  .flag{font-size:23px;line-height:1;width:30px;text-align:center;flex:0 0 auto;filter:saturate(1.05)}
+  .flag.empty{font-size:15px;color:var(--faint)}
+  .tname{
+    font-family:"Arial Narrow","Roboto Condensed",sans-serif;
+    font-weight:700;text-transform:uppercase;letter-spacing:.02em;
+    font-size:18px;line-height:1.05;flex:1;min-width:0;
+    overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+  }
+  .row.placeholder .tname{color:var(--faint);font-weight:600;letter-spacing:.06em}
+  .row.editable{cursor:pointer}
+  .row.editable:hover{background:var(--surface-2)}
+  .row.editable .tname::after{content:"✎";font-size:11px;color:var(--faint);margin-left:8px;opacity:0;transition:.15s;-webkit-text-stroke:0}
+  .row.editable:hover .tname::after{opacity:1}
+  .row.win .tname{color:var(--gold)}
+  .row.win{background:linear-gradient(90deg,var(--gold-soft),transparent 70%)}
+  .row.lose{opacity:.5}
+  .row.lose .tname{text-decoration:line-through;text-decoration-color:var(--faint);text-decoration-thickness:1px}
+  .win-dot{width:8px;height:8px;border-radius:99px;background:var(--gold);flex:0 0 auto;box-shadow:0 0 0 3px var(--gold-soft)}
+
+  .score{
+    width:46px;height:40px;flex:0 0 auto;text-align:center;
+    font-family:"Arial Narrow","Roboto Condensed",sans-serif;
+    font-weight:700;font-size:22px;font-variant-numeric:tabular-nums;
+    border:1px solid var(--line-strong);border-radius:10px;
+    background:var(--surface-2);color:var(--ink);
+  }
+  .score::-webkit-outer-spin-button,.score::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
+  .score[type=number]{-moz-appearance:textfield}
+  .score:disabled{opacity:.4;cursor:not-allowed}
+  .score:focus{border-color:var(--gold-bright);background:var(--surface)}
+  .pens{
+    display:flex;align-items:center;gap:8px;justify-content:center;
+    padding:9px 14px;border-top:1px dashed var(--line-strong);
+    font-size:11px;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);font-weight:600;
+    background:var(--surface-2);
+  }
+  .pens input{
+    width:38px;height:30px;text-align:center;font-weight:700;font-variant-numeric:tabular-nums;
+    border:1px solid var(--line-strong);border-radius:8px;background:var(--surface);color:var(--ink);
+    font-family:"Arial Narrow","Roboto Condensed",sans-serif;font-size:16px;
+  }
+  .pens .lbl{flex:1;text-align:center}
+  @keyframes pulseGold{0%{box-shadow:0 0 0 0 var(--gold-bright)}100%{box-shadow:0 0 0 8px transparent}}
+  .just-won{animation:pulseGold .7s ease-out}
+
+  /* ---------- champion ---------- */
+  .champion{
+    display:flex;align-items:center;gap:16px;
+    background:
+      radial-gradient(120% 160% at 100% 0%, color-mix(in srgb,var(--gold-bright) 22%,transparent), transparent 60%),
+      var(--surface);
+    border:1px solid var(--gold);border-radius:16px;padding:16px 20px;box-shadow:var(--shadow);
+  }
+  .champion .cf{font-size:44px;line-height:1}
+  .champion .ct{display:flex;flex-direction:column;gap:2px}
+  .champion .ck{font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--gold);font-weight:700}
+  .champion .cn{
+    font-family:"Arial Narrow","Roboto Condensed",sans-serif;font-weight:700;
+    text-transform:uppercase;letter-spacing:.03em;font-size:clamp(24px,4vw,34px);line-height:1;
+  }
+  .champ-empty{color:var(--muted);font-size:13.5px;font-style:italic}
+
+  /* ---------- CHAVE (bracket) view ---------- */
+  .bracket-scroll{overflow-x:auto;padding-bottom:18px;-webkit-overflow-scrolling:touch}
+  .bracket{display:flex;align-items:stretch;gap:34px;min-width:940px;padding:4px 2px}
+  .col{display:flex;flex-direction:column;justify-content:space-around;flex:1;gap:10px;min-width:172px}
+  .col-title{
+    font-family:"Arial Narrow","Roboto Condensed",sans-serif;font-weight:700;
+    text-transform:uppercase;letter-spacing:.07em;font-size:12.5px;color:var(--muted);
+    text-align:center;padding-bottom:2px;position:sticky;left:0;
+  }
+  .bmatch{
+    position:relative;background:var(--surface);border:1px solid var(--line);
+    border-radius:11px;box-shadow:var(--shadow);overflow:hidden;
+  }
+  .brow{display:flex;align-items:center;gap:8px;padding:7px 10px}
+  .brow + .brow{border-top:1px solid var(--line)}
+  .brow .flag{font-size:17px;width:22px}
+  .brow .bn{
+    font-family:"Arial Narrow","Roboto Condensed",sans-serif;font-weight:700;
+    text-transform:uppercase;font-size:14px;flex:1;min-width:0;letter-spacing:.01em;
+    overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+  }
+  .brow.placeholder .bn{color:var(--faint);font-weight:600}
+  .brow.editable{cursor:pointer}
+  .brow.editable:hover{background:var(--surface-2)}
+  .brow.win .bn{color:var(--gold)}
+  .brow.win{background:linear-gradient(90deg,var(--gold-soft),transparent 75%)}
+  .brow.lose{opacity:.5}
+  .brow.lose .bn{text-decoration:line-through;text-decoration-color:var(--faint)}
+  .bscore{
+    width:26px;text-align:center;font-family:"Arial Narrow","Roboto Condensed",sans-serif;
+    font-weight:700;font-size:16px;font-variant-numeric:tabular-nums;flex:0 0 auto;color:var(--muted);
+  }
+  .brow.win .bscore{color:var(--gold)}
+  .bpen{font-size:10px;color:var(--faint);text-align:center;padding:3px 0 5px;letter-spacing:.05em}
+  /* connectors */
+  .col:not(.col-first) .bmatch::before{
+    content:"";position:absolute;left:-18px;top:50%;width:18px;height:2px;background:var(--line-strong);
+  }
+  .col:not(.col-last) .bmatch::after{
+    content:"";position:absolute;right:-18px;top:50%;width:18px;height:2px;background:var(--line-strong);
+  }
+  .bmatch.decided::after,.bmatch.decided.feedwin::before{background:var(--gold)}
+
+  .final-wrap{display:flex;flex-direction:column;justify-content:center;gap:16px;min-width:200px}
+  .trophy{text-align:center;font-size:34px;filter:drop-shadow(0 4px 10px rgba(0,0,0,.2))}
+  .bmatch.final-match{border-color:var(--gold);box-shadow:0 0 0 1px var(--gold),var(--shadow)}
+
+  .third-block{margin-top:8px}
+
+  /* ---------- picker modal ---------- */
+  .overlay{
+    position:fixed;inset:0;z-index:60;background:rgba(8,14,11,.55);
+    display:none;align-items:flex-start;justify-content:center;padding:8vh 16px 16px;
+    backdrop-filter:blur(3px);
+  }
+  .overlay.open{display:flex}
+  .picker{
+    width:100%;max-width:440px;background:var(--surface);border:1px solid var(--line-strong);
+    border-radius:16px;box-shadow:0 24px 60px rgba(0,0,0,.4);overflow:hidden;
+    display:flex;flex-direction:column;max-height:78vh;
+  }
+  .picker-head{padding:15px 16px 12px;border-bottom:1px solid var(--line)}
+  .picker-head h3{
+    margin:0 0 10px;font-family:"Arial Narrow","Roboto Condensed",sans-serif;
+    font-weight:700;text-transform:uppercase;letter-spacing:.05em;font-size:17px;
+  }
+  .search{
+    width:100%;padding:11px 13px;border:1px solid var(--line-strong);border-radius:10px;
+    background:var(--surface-2);color:var(--ink);font-size:15px;
+  }
+  .search:focus{border-color:var(--gold-bright);background:var(--surface)}
+  .plist{overflow-y:auto;padding:6px}
+  .pitem{
+    display:flex;align-items:center;gap:12px;width:100%;text-align:left;
+    padding:10px 12px;border:0;background:none;color:var(--ink);border-radius:10px;font-size:15px;
+  }
+  .pitem:hover,.pitem.kb{background:var(--surface-2)}
+  .pitem .flag{font-size:22px;width:28px}
+  .pitem.clear{color:var(--muted);font-style:italic}
+  .pitem .code{margin-left:auto;font-size:11px;color:var(--faint);font-variant-numeric:tabular-nums;letter-spacing:.05em}
+
+  @media (max-width:560px){
+    .head-inner{gap:12px}
+    .cards{grid-template-columns:1fr}
+    .seg button{padding:7px 13px}
+  }
+  @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+
+<header>
+  <div class="head-inner">
+    <div class="brand">
+      <div class="wordmark">Copa <b>2026</b> · Minha Chave</div>
+      <div class="tagline">Do 16-avos à final — você preenche, a chave avança sozinha</div>
+    </div>
+    <div class="controls">
+      <div class="seg" role="tablist" aria-label="Modo de visualização">
+        <button id="view-lista" aria-pressed="true">Lista</button>
+        <button id="view-chave" aria-pressed="false">Chave</button>
+      </div>
+      <button class="icon-btn" id="theme-btn" title="Alternar tema" aria-label="Alternar tema">◐</button>
+      <button class="icon-btn" id="reset-btn" title="Recomeçar" aria-label="Recomeçar">↺</button>
+    </div>
+  </div>
+  <div class="stage-strip" id="stage-strip"></div>
+  <div class="champ-line" id="champ-line"></div>
+</header>
+
+<main id="app"></main>
+
+<div class="overlay" id="overlay">
+  <div class="picker" role="dialog" aria-modal="true" aria-label="Escolher seleção">
+    <div class="picker-head">
+      <h3 id="picker-title">Escolher seleção</h3>
+      <input class="search" id="picker-search" placeholder="Buscar país…" autocomplete="off">
+    </div>
+    <div class="plist" id="picker-list"></div>
+  </div>
+</div>
+
+<script>
+"use strict";
+
+/* ---------- flags ---------- */
+function subFlag(sub){
+  return String.fromCodePoint(0x1F3F4)
+    + [...sub].map(c=>String.fromCodePoint(0xE0000 + c.charCodeAt(0))).join('')
+    + String.fromCodePoint(0xE007F);
+}
+const SPECIAL = {ENG:subFlag('gbeng'), SCO:subFlag('gbsct'), WAL:subFlag('gbwls')};
+function flagOf(code){
+  if(!code) return '';
+  if(SPECIAL[code]) return SPECIAL[code];
+  return code.toUpperCase().replace(/[A-Z]/g,c=>String.fromCodePoint(0x1F1E6 + c.charCodeAt(0)-65));
+}
+
+/* ---------- country pool (edite à vontade no picker) ---------- */
+const COUNTRIES = [
+  ["Argentina","AR"],["Brasil","BR"],["Uruguai","UY"],["Colômbia","CO"],["Equador","EC"],
+  ["Peru","PE"],["Chile","CL"],["Paraguai","PY"],["Venezuela","VE"],["Bolívia","BO"],
+  ["França","FR"],["Espanha","ES"],["Inglaterra","ENG"],["Portugal","PT"],["Alemanha","DE"],
+  ["Itália","IT"],["Países Baixos","NL"],["Bélgica","BE"],["Croácia","HR"],["Suíça","CH"],
+  ["Dinamarca","DK"],["Polônia","PL"],["Sérvia","RS"],["Áustria","AT"],["Ucrânia","UA"],
+  ["Turquia","TR"],["Suécia","SE"],["Noruega","NO"],["Escócia","SCO"],["País de Gales","WAL"],
+  ["Grécia","GR"],["Rep. Tcheca","CZ"],["Hungria","HU"],["Romênia","RO"],["Eslovênia","SI"],
+  ["Eslováquia","SK"],["Estados Unidos","US"],["México","MX"],["Canadá","CA"],["Costa Rica","CR"],
+  ["Panamá","PA"],["Honduras","HN"],["Jamaica","JM"],["El Salvador","SV"],["Guatemala","GT"],
+  ["Curaçao","CW"],["Haiti","HT"],["Japão","JP"],["Coreia do Sul","KR"],["Austrália","AU"],
+  ["Irã","IR"],["Arábia Saudita","SA"],["Catar","QA"],["Emirados Árabes","AE"],["Iraque","IQ"],
+  ["Jordânia","JO"],["Uzbequistão","UZ"],["Nova Zelândia","NZ"],["Marrocos","MA"],["Senegal","SN"],
+  ["Gana","GH"],["Nigéria","NG"],["Egito","EG"],["Camarões","CM"],["Costa do Marfim","CI"],
+  ["Argélia","DZ"],["Tunísia","TN"],["África do Sul","ZA"],["Mali","ML"],["Cabo Verde","CV"],
+  ["RD Congo","CD"],["Angola","AO"],["Burkina Faso","BF"],
+].map(([name,code])=>({name,code}));
+COUNTRIES.sort((a,b)=>a.name.localeCompare(b.name,'pt'));
+
+/* ---------- bracket structure ---------- */
+const ROUNDS = [
+  {key:'r32', name:'16-avos', n:16},
+  {key:'r16', name:'Oitavas', n:8},
+  {key:'qf',  name:'Quartas', n:4},
+  {key:'sf',  name:'Semifinais', n:2},
+  {key:'f',   name:'Final', n:1},
+];
+const RN = ROUNDS.map(r=>r.n);
+const EMPTY = {code:'',name:''};
+
+// 32 seed placeholders, arranged so each group winner meets a runner-up / third.
+const SEED_LABELS = [
+  '1º A','2º B',  '1º C','2º D',  '1º E','2º F',  '1º G','2º H',
+  '1º I','2º J',  '1º K','2º L',  '2º A','1º B',  '2º C','1º D',
+  '3º · 1','1º F', '1º H','3º · 2', '3º · 3','1º J', '1º L','3º · 4',
+  '2º E','3º · 5', '3º · 6','2º G', '2º I','3º · 7', '3º · 8','2º K',
+];
+
+/* ---------- datas oficiais (janelas FIFA 2026) — editáveis ---------- */
+const DATES = {
+  '0:0':'2026-06-28','0:1':'2026-06-28','0:2':'2026-06-28',
+  '0:3':'2026-06-29','0:4':'2026-06-29','0:5':'2026-06-29',
+  '0:6':'2026-06-30','0:7':'2026-06-30','0:8':'2026-06-30',
+  '0:9':'2026-07-01','0:10':'2026-07-01',
+  '0:11':'2026-07-02','0:12':'2026-07-02',
+  '0:13':'2026-07-03','0:14':'2026-07-03','0:15':'2026-07-03',
+  '1:0':'2026-07-04','1:1':'2026-07-04','1:2':'2026-07-05','1:3':'2026-07-05',
+  '1:4':'2026-07-06','1:5':'2026-07-06','1:6':'2026-07-07','1:7':'2026-07-07',
+  '2:0':'2026-07-09','2:1':'2026-07-09','2:2':'2026-07-10','2:3':'2026-07-11',
+  '3:0':'2026-07-14','3:1':'2026-07-15',
+  '4:0':'2026-07-19','tp:0':'2026-07-18',
+};
+const DIAS = ['dom','seg','ter','qua','qui','sex','sáb'];
+const MESES = ['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez'];
+function dateKey(r,m){ return (r==='tp')?'tp:0':(r+':'+m); }
+function dateFor(r,m){ const k=dateKey(r,m); return (S.dates && S.dates[k]!=null)?S.dates[k]:(DATES[k]||''); }
+function fmtDate(iso){
+  if(!iso) return 'Sem data';
+  const d=new Date(iso+'T12:00:00');
+  if(isNaN(d)) return 'Sem data';
+  return `${DIAS[d.getDay()]} ${String(d.getDate()).padStart(2,'0')} ${MESES[d.getMonth()]}`;
+}
+
+/* ---------- state ---------- */
+const LS_KEY = 'copa2026-chave-v1';
+let S = load();
+
+function freshState(){
+  return {
+    seeds: SEED_LABELS.map(l=>({code:'',name:'',label:l})),
+    scores:{}, pens:{}, dates:{}, ident:{}, view:'lista', theme:null, noteHidden:false,
+  };
+}
+function load(){
+  try{
+    const raw = localStorage.getItem(LS_KEY);
+    if(!raw) return freshState();
+    const s = JSON.parse(raw);
+    if(!s.seeds || s.seeds.length!==32) return freshState();
+    s.scores=s.scores||{}; s.pens=s.pens||{}; s.dates=s.dates||{}; s.ident=s.ident||{};
+    s.view=s.view||'lista';
+    return s;
+  }catch(e){ return freshState(); }
+}
+function save(){ try{ localStorage.setItem(LS_KEY, JSON.stringify(S)); }catch(e){} }
+
+function keyOf(r,m,s){ return r+':'+m+':'+s; }
+function num(v){ return (v===''||v==null||isNaN(v))?null:parseInt(v,10); }
+function present(p){ return !!(p && p.name); }
+
+function slotView(p){
+  // returns {code,name,placeholder}
+  if(!p) return {code:'',name:'',placeholder:true};
+  if(p.code) return {code:p.code,name:p.name,placeholder:false};
+  if(p.name) return {code:'',name:p.name,placeholder:false};       // typed team without flag
+  return {code:'',name:p.label||'A definir',placeholder:true};      // seed placeholder
+}
+
+function winnerOf(P,r,m){
+  const mt = P[r][m]; const a=mt.a, b=mt.b;
+  if(!present(a)||!present(b)) return null;
+  const sa=num(S.scores[keyOf(r,m,'a')]), sb=num(S.scores[keyOf(r,m,'b')]);
+  if(sa==null||sb==null) return null;
+  if(sa>sb) return a;
+  if(sb>sa) return b;
+  const pa=num(S.pens[keyOf(r,m,'a')]), pb=num(S.pens[keyOf(r,m,'b')]);
+  if(pa==null||pb==null||pa===pb) return null;
+  return pa>pb ? a : b;
+}
+function loserOf(P,r,m){
+  const w=winnerOf(P,r,m); if(!w) return null;
+  const mt=P[r][m]; return (w===mt.a)?mt.b:mt.a;
+}
+
+function buildParticipants(){
+  const P=[];
+  P[0]=[];
+  for(let m=0;m<16;m++) P[0].push({a:S.seeds[m*2], b:S.seeds[m*2+1]});
+  for(let r=1;r<5;r++){
+    P[r]=[];
+    for(let m=0;m<RN[r];m++){
+      const a=winnerOf(P,r-1,2*m)||EMPTY;
+      const b=winnerOf(P,r-1,2*m+1)||EMPTY;
+      P[r].push({a,b});
+    }
+  }
+  return P;
+}
+
+// recompute participants, clearing scores of matchups whose teams changed
+function recompute(){
+  let P=buildParticipants();
+  for(let it=0; it<8; it++){
+    let changed=false;
+    for(let r=1;r<5;r++){
+      for(let m=0;m<RN[r];m++){
+        for(const s of ['a','b']){
+          const p=P[r][m][s];
+          const id = present(p) ? (p.code+'|'+p.name) : '';
+          const k=keyOf(r,m,s);
+          if(S.ident[k]!==undefined && S.ident[k]!==id){
+            delete S.scores[keyOf(r,m,'a')]; delete S.scores[keyOf(r,m,'b')];
+            delete S.pens[keyOf(r,m,'a')];   delete S.pens[keyOf(r,m,'b')];
+            changed=true;
+          }
+          S.ident[k]=id;
+        }
+      }
+    }
+    if(!changed) break;
+    P=buildParticipants();
+  }
+  return P;
+}
+
+function thirdPlace(P){
+  return { a: loserOf(P,3,0)||EMPTY, b: loserOf(P,3,1)||EMPTY };
+}
+function decidedCount(P){
+  let c=0;
+  for(let r=0;r<5;r++) for(let m=0;m<RN[r];m++) if(winnerOf(P,r,m)) c++;
+  return c;
+}
+function roundDecided(P,r){ let c=0; for(let m=0;m<RN[r];m++) if(winnerOf(P,r,m)) c++; return c; }
+
+/* ================= RENDER ================= */
+const app = document.getElementById('app');
+let lastWinners = {}; // for pulse animation
+
+function esc(str){ return (str||'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+
+function render(){
+  const P = recompute();
+  save();
+  renderStageStrip(P);
+  renderChampLine(P);
+  document.getElementById('view-lista').setAttribute('aria-pressed', S.view==='lista');
+  document.getElementById('view-chave').setAttribute('aria-pressed', S.view==='chave');
+  if(S.view==='lista') renderLista(P); else renderChave(P);
+}
+
+function renderStageStrip(P){
+  const strip = document.getElementById('stage-strip');
+  // find first not-fully-decided round = active
+  let active = ROUNDS.findIndex((r,i)=> roundDecided(P,i) < RN[i]);
+  let html='';
+  ROUNDS.forEach((r,i)=>{
+    const d=roundDecided(P,i);
+    const done = d===RN[i];
+    const cls = done ? 'done' : (i===active ? 'active':'');
+    html += `<div class="stage-pill ${cls}">
+      <div class="s-name">${r.name}</div>
+      <div class="s-meta"><span class="dotm"></span>${d}/${RN[i]} decididos</div>
+    </div>`;
+  });
+  strip.innerHTML = html;
+}
+
+function renderChampLine(P){
+  const line=document.getElementById('champ-line');
+  const champ = winnerOf(P,4,0);
+  if(champ && present(champ)){
+    const v=slotView(champ);
+    line.innerHTML = `<div class="champion">
+      <div class="cf">${flagOf(v.code)||'🏆'}</div>
+      <div class="ct"><div class="ck">🏆 Campeã do mundo</div><div class="cn">${esc(v.name)}</div></div>
+    </div>`;
+  } else {
+    line.innerHTML='';
+  }
+}
+
+/* ---- LISTA ---- */
+function renderLista(P){
+  let active = ROUNDS.findIndex((r,i)=> roundDecided(P,i) < RN[i]);
+  let html='';
+
+  if(!S.noteHidden){
+    html += `<div class="note">
+      <span>ℹ️</span>
+      <div><b>Ajuste os times do 16-avos:</b> toque em qualquer seleção para escolher o país (com bandeira). Depois é só preencher os placares — o vencedor avança sozinho para a próxima fase. Em caso de empate, aparecem os pênaltis.</div>
+      <button class="x" id="note-x" aria-label="Fechar aviso">×</button>
+    </div>`;
+  }
+
+  ROUNDS.forEach((r,ri)=>{
+    const d=roundDecided(P,ri);
+    const done=d===RN[ri];
+    html += `<section class="round-block">
+      <div class="round-head">
+        <h2>${r.name}</h2>
+        <span class="count tnum">${d}/${RN[ri]}</span>
+        ${(ri===active && !done)?'<span class="badge">Em andamento</span>':''}
+        ${done?'<span class="badge">Completo ✓</span>':''}
+        <span class="rule"></span>
+      </div>
+      <div class="cards">`;
+    for(let m=0;m<RN[ri];m++){
+      html += matchCard(P,ri,m);
+    }
+    html += `</div></section>`;
+  });
+
+  // third place
+  const tp = thirdPlace(P);
+  html += `<section class="round-block third-block">
+    <div class="round-head"><h2>Disputa de 3º lugar</h2><span class="rule"></span></div>
+    <div class="cards">${thirdCard(tp)}</div>
+  </section>`;
+
+  app.innerHTML = html;
+}
+
+function matchCard(P,r,m){
+  const mt=P[r][m];
+  const a=slotView(mt.a), b=slotView(mt.b);
+  const w=winnerOf(P,r,m);
+  const bothPresent = present(mt.a)&&present(mt.b);
+  const editable = (r===0);
+  const sa=S.scores[keyOf(r,m,'a')]??'', sb=S.scores[keyOf(r,m,'b')]??'';
+  const na=num(sa), nb=num(sb);
+  const draw = bothPresent && na!=null && nb!=null && na===nb;
+  const winA = w && w===mt.a, winB = w && w===mt.b;
+
+  const matchNo = globalMatchNo(r,m);
+  const decidedCls = w?'decided':'';
+
+  function rowHtml(side,v,present_,winSide,seedIdx){
+    let cls='row';
+    if(editable) cls+=' editable';
+    if(v.placeholder) cls+=' placeholder';
+    if(w){ cls += winSide?' win':' lose'; }
+    const flag = v.code?flagOf(v.code):(v.placeholder?'○':'');
+    const flagCls = v.code?'flag':'flag empty';
+    const dataSeed = editable?`data-seed="${seedIdx}"`:'';
+    const scVal = side==='a'?sa:sb;
+    const scDis = bothPresent?'':'disabled';
+    return `<div class="${cls}" ${dataSeed}>
+      ${winSide&&w?'<span class="win-dot"></span>':''}
+      <span class="${flagCls}">${flag}</span>
+      <span class="tname">${esc(v.name)}</span>
+      <input class="score tnum" type="number" min="0" inputmode="numeric"
+        value="${scVal===''?'':esc(String(scVal))}" ${scDis}
+        data-r="${r}" data-m="${m}" data-s="${side}" data-kind="score" aria-label="Placar">
+    </div>`;
+  }
+
+  let pens='';
+  if(draw){
+    const pa=S.pens[keyOf(r,m,'a')]??'', pb=S.pens[keyOf(r,m,'b')]??'';
+    pens = `<div class="pens">
+      <input type="number" min="0" inputmode="numeric" value="${pa===''?'':esc(String(pa))}" data-r="${r}" data-m="${m}" data-s="a" data-kind="pen" aria-label="Pênaltis mandante">
+      <span class="lbl">Pênaltis</span>
+      <input type="number" min="0" inputmode="numeric" value="${pb===''?'':esc(String(pb))}" data-r="${r}" data-m="${m}" data-s="b" data-kind="pen" aria-label="Pênaltis visitante">
+    </div>`;
+  }
+
+  return `<div class="match" data-match>
+    <div class="m-tag">
+      <span>Jogo ${matchNo}</span>
+      <input class="datein" type="date" value="${dateFor(r,m)}" data-r="${r}" data-m="${m}" data-kind="date" aria-label="Data do jogo">
+      <span class="state ${w?'decided':''}">${w?'✓ Decidido':'A jogar'}</span>
+    </div>
+    ${rowHtml('a',a,present(mt.a),winA,m*2)}
+    ${rowHtml('b',b,present(mt.b),winB,m*2+1)}
+    ${pens}
+  </div>`;
+}
+
+function thirdCard(tp){
+  const a=slotView(tp.a), b=slotView(tp.b);
+  // reuse a light static card (result via S.scores under key 'tp')
+  const sa=S.scores['tp:0:a']??'', sb=S.scores['tp:0:b']??'';
+  const na=num(sa), nb=num(sb);
+  const bothPresent=present(tp.a)&&present(tp.b);
+  let w=null;
+  if(bothPresent && na!=null && nb!=null){
+    if(na>nb)w='a'; else if(nb>na)w='b';
+    else { const pa=num(S.pens['tp:0:a']),pb=num(S.pens['tp:0:b']); if(pa!=null&&pb!=null&&pa!==pb)w=pa>pb?'a':'b'; }
+  }
+  const draw = bothPresent && na!=null && nb!=null && na===nb;
+  function row(side,v,winSide){
+    let cls='row';
+    if(w) cls+= winSide?' win':' lose';
+    if(v.placeholder) cls+=' placeholder';
+    const flag=v.code?flagOf(v.code):(v.placeholder?'○':'');
+    const scVal = side==='a'?sa:sb;
+    return `<div class="${cls}">
+      ${winSide&&w?'<span class="win-dot"></span>':''}
+      <span class="${v.code?'flag':'flag empty'}">${flag}</span>
+      <span class="tname">${esc(v.name)}</span>
+      <input class="score tnum" type="number" min="0" inputmode="numeric" ${bothPresent?'':'disabled'}
+        value="${scVal===''?'':esc(String(scVal))}" data-r="tp" data-m="0" data-s="${side}" data-kind="score" aria-label="Placar">
+    </div>`;
+  }
+  let pens='';
+  if(draw){
+    const pa=S.pens['tp:0:a']??'', pb=S.pens['tp:0:b']??'';
+    pens=`<div class="pens">
+      <input type="number" min="0" value="${pa===''?'':esc(String(pa))}" data-r="tp" data-m="0" data-s="a" data-kind="pen" aria-label="Pênaltis">
+      <span class="lbl">Pênaltis</span>
+      <input type="number" min="0" value="${pb===''?'':esc(String(pb))}" data-r="tp" data-m="0" data-s="b" data-kind="pen" aria-label="Pênaltis">
+    </div>`;
+  }
+  return `<div class="match">
+    <div class="m-tag"><span>Bronze</span>
+      <input class="datein" type="date" value="${dateFor('tp',0)}" data-r="tp" data-m="0" data-kind="date" aria-label="Data do jogo">
+      <span class="state ${w?'decided':''}">${w?'✓ Decidido':'A jogar'}</span></div>
+    ${row('a',a,w==='a')}
+    ${row('b',b,w==='b')}
+    ${pens}
+  </div>`;
+}
+
+function globalMatchNo(r,m){
+  let base=0; for(let i=0;i<r;i++) base+=RN[i]; return base+m+1;
+}
+
+/* ---- CHAVE (bracket) ---- */
+function renderChave(P){
+  let html='<div class="bracket-scroll"><div class="bracket">';
+  ROUNDS.forEach((r,ri)=>{
+    const first = ri===0?'col-first':'';
+    const last = ri===4?'col-last':'';
+    html += `<div class="col ${first} ${last}">
+      <div class="col-title">${r.name}</div>`;
+    for(let m=0;m<RN[ri];m++){
+      html += bMatch(P,ri,m);
+    }
+    html += `</div>`;
+  });
+  // champion column
+  const champ=winnerOf(P,4,0);
+  const cv = champ?slotView(champ):null;
+  html += `<div class="final-wrap col-last">
+    <div class="trophy">🏆</div>
+    ${cv?`<div class="bmatch final-match"><div class="brow win"><span class="flag">${flagOf(cv.code)||'🏆'}</span><span class="bn">${esc(cv.name)}</span></div></div>`
+        :`<div class="bmatch"><div class="brow placeholder"><span class="flag empty">○</span><span class="bn">Campeã</span></div></div>`}
+  </div>`;
+  html += '</div></div>';
+
+  // third place under bracket
+  const tp=thirdPlace(P);
+  html += `<div style="max-width:520px;margin:6px auto 0">
+    <div class="round-head"><h2 style="font-size:18px">Disputa de 3º lugar</h2><span class="rule"></span></div>
+    <div class="cards">${thirdCard(tp)}</div>
+  </div>`;
+
+  app.innerHTML = html;
+}
+
+function bMatch(P,r,m){
+  const mt=P[r][m];
+  const a=slotView(mt.a), b=slotView(mt.b);
+  const w=winnerOf(P,r,m);
+  const editable=r===0;
+  const sa=S.scores[keyOf(r,m,'a')]??'', sb=S.scores[keyOf(r,m,'b')]??'';
+  function row(side,v,winSide,seedIdx){
+    let cls='brow';
+    if(editable) cls+=' editable';
+    if(v.placeholder) cls+=' placeholder';
+    if(w) cls+= winSide?' win':' lose';
+    const flag=v.code?flagOf(v.code):(v.placeholder?'○':'');
+    const sc=(side==='a'?sa:sb);
+    const dataSeed=editable?`data-seed="${seedIdx}"`:'';
+    return `<div class="${cls}" ${dataSeed}>
+      <span class="${v.code?'flag':'flag empty'}">${flag}</span>
+      <span class="bn">${esc(v.name)}</span>
+      <span class="bscore tnum">${sc===''?'':esc(String(sc))}</span>
+    </div>`;
+  }
+  const pa=S.pens[keyOf(r,m,'a')], pb=S.pens[keyOf(r,m,'b')];
+  const penLine=(pa!=null&&pa!==''&&pb!=null&&pb!=='')?`<div class="bpen">pênaltis ${esc(String(pa))}–${esc(String(pb))}</div>`:'';
+  const decided=w?'decided':'';
+  return `<div class="bmatch ${decided}">
+    <div class="bdate">${fmtDate(dateFor(r,m))}</div>
+    ${row('a',a,w&&w===mt.a,m*2)}
+    ${row('b',b,w&&w===mt.b,m*2+1)}
+    ${penLine}
+  </div>`;
+}
+
+/* ================= EVENTS ================= */
+// score / pen inputs (fire on change to avoid focus loss)
+app.addEventListener('change', e=>{
+  const t=e.target;
+  if(t.dataset.kind==='date'){
+    const k=dateKey(t.dataset.r, t.dataset.m);
+    if(t.value==='') S.dates[k]=''; else S.dates[k]=t.value;
+    save(); render();
+    return;
+  }
+  if(t.dataset.kind==='score'||t.dataset.kind==='pen'){
+    const r=t.dataset.r, m=t.dataset.m, s=t.dataset.s, kind=t.dataset.kind;
+    let v=t.value.trim();
+    if(v!==''){ v=String(Math.max(0, parseInt(v,10)||0)); }
+    const store = kind==='score'?S.scores:S.pens;
+    const k = (r==='tp')?('tp:'+m+':'+s):keyOf(r,m,s);
+    if(v==='') delete store[k]; else store[k]=v;
+    render();
+  }
+});
+// prevent negative typing weirdness / keep tidy on blur handled by change
+
+// open picker on team slot (r32 only)
+app.addEventListener('click', e=>{
+  const row=e.target.closest('[data-seed]');
+  if(!row) return;
+  if(e.target.closest('.score')) return; // clicking the input
+  openPicker(parseInt(row.dataset.seed,10));
+});
+
+/* view toggle */
+document.getElementById('view-lista').onclick=()=>{ S.view='lista'; render(); };
+document.getElementById('view-chave').onclick=()=>{ S.view='chave'; render(); };
+
+/* note close (delegated) */
+document.addEventListener('click', e=>{
+  if(e.target.id==='note-x'){ S.noteHidden=true; render(); }
+});
+
+/* theme */
+function applyTheme(){
+  if(S.theme==='dark'||S.theme==='light') document.documentElement.setAttribute('data-theme',S.theme);
+  else document.documentElement.removeAttribute('data-theme');
+}
+document.getElementById('theme-btn').onclick=()=>{
+  const cur = S.theme || (matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light');
+  S.theme = cur==='dark'?'light':'dark';
+  applyTheme(); save();
+};
+
+/* reset */
+document.getElementById('reset-btn').onclick=()=>{
+  if(confirm('Recomeçar a chave? Isso apaga todos os times e placares que você preencheu.')){
+    const theme=S.theme, view=S.view;
+    S=freshState(); S.theme=theme; S.view=view;
+    save(); render();
+  }
+};
+
+/* ---------- picker ---------- */
+const overlay=document.getElementById('overlay');
+const pickerList=document.getElementById('picker-list');
+const pickerSearch=document.getElementById('picker-search');
+let pickTarget=null, kbIndex=-1, filtered=[];
+
+function openPicker(seedIdx){
+  pickTarget=seedIdx;
+  pickerSearch.value='';
+  buildPickerList('');
+  overlay.classList.add('open');
+  setTimeout(()=>pickerSearch.focus(),30);
+}
+function closePicker(){ overlay.classList.remove('open'); pickTarget=null; kbIndex=-1; }
+
+function buildPickerList(q){
+  q=q.trim().toLowerCase();
+  filtered = q? COUNTRIES.filter(c=>c.name.toLowerCase().includes(q)||c.code.toLowerCase().includes(q)) : COUNTRIES;
+  kbIndex = q?0:-1;
+  let html = `<button class="pitem clear" data-clear="1">↺ Deixar como “a definir”</button>`;
+  html += filtered.map((c,i)=>`<button class="pitem ${i===kbIndex?'kb':''}" data-code="${c.code}" data-name="${esc(c.name)}">
+    <span class="flag">${flagOf(c.code)}</span><span>${esc(c.name)}</span><span class="code">${c.code}</span>
+  </button>`).join('');
+  pickerList.innerHTML=html;
+}
+function chooseCountry(code,name){
+  if(pickTarget==null) return;
+  if(code===null){ S.seeds[pickTarget]={code:'',name:'',label:SEED_LABELS[pickTarget]}; }
+  else { S.seeds[pickTarget]={code,name,label:SEED_LABELS[pickTarget]}; }
+  closePicker(); render();
+}
+pickerList.addEventListener('click',e=>{
+  const b=e.target.closest('.pitem'); if(!b) return;
+  if(b.dataset.clear){ chooseCountry(null); return; }
+  chooseCountry(b.dataset.code, b.dataset.name);
+});
+pickerSearch.addEventListener('input',e=>buildPickerList(e.target.value));
+pickerSearch.addEventListener('keydown',e=>{
+  if(e.key==='Escape'){ closePicker(); return; }
+  if(e.key==='ArrowDown'){ e.preventDefault(); kbIndex=Math.min(filtered.length-1,kbIndex+1); refreshKb(); }
+  else if(e.key==='ArrowUp'){ e.preventDefault(); kbIndex=Math.max(0,kbIndex-1); refreshKb(); }
+  else if(e.key==='Enter'){ e.preventDefault(); const c=filtered[kbIndex]; if(c) chooseCountry(c.code,c.name); }
+});
+function refreshKb(){
+  [...pickerList.querySelectorAll('.pitem[data-code]')].forEach((el,i)=>{
+    el.classList.toggle('kb', i===kbIndex);
+    if(i===kbIndex) el.scrollIntoView({block:'nearest'});
+  });
+}
+overlay.addEventListener('click',e=>{ if(e.target===overlay) closePicker(); });
+
+/* ---------- boot ---------- */
+applyTheme();
+render();
+</script>
+
+</html>
