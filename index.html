@@ -89,6 +89,14 @@
     display:grid;place-items:center;transition:.18s;
   }
   .icon-btn:hover{border-color:var(--line-strong)}
+  .saved-chip{
+    display:inline-flex;align-items:center;gap:5px;
+    font-size:11px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;
+    color:var(--gold);background:var(--gold-soft);
+    border-radius:999px;padding:6px 12px;white-space:nowrap;
+    opacity:0;transform:translateY(-3px);transition:opacity .3s,transform .3s;pointer-events:none;
+  }
+  .saved-chip.show{opacity:1;transform:none}
 
   /* ---------- progress strip ---------- */
   .stage-strip{
@@ -111,9 +119,6 @@
   .dotm{width:7px;height:7px;border-radius:99px;background:var(--line-strong)}
   .stage-pill.active .dotm{background:var(--gold-bright)}
   .stage-pill.done .dotm{background:var(--gold)}
-  .champ-line{
-    max-width:1180px;margin:14px auto 0;padding:0 20px;
-  }
 
   main{max-width:1180px;margin:0 auto;padding:22px 20px 0}
 
@@ -222,6 +227,7 @@
       radial-gradient(120% 160% at 100% 0%, color-mix(in srgb,var(--gold-bright) 22%,transparent), transparent 60%),
       var(--surface);
     border:1px solid var(--gold);border-radius:16px;padding:16px 20px;box-shadow:var(--shadow);
+    margin-bottom:22px;
   }
   .champion .cf{font-size:44px;line-height:1}
   .champion .ct{display:flex;flex-direction:column;gap:2px}
@@ -234,8 +240,21 @@
 
   /* ---------- CHAVE (bracket) view ---------- */
   .bracket-scroll{overflow-x:auto;padding-bottom:18px;-webkit-overflow-scrolling:touch}
-  .bracket{display:flex;align-items:stretch;gap:34px;min-width:940px;padding:4px 2px}
-  .col{display:flex;flex-direction:column;justify-content:space-around;flex:1;gap:10px;min-width:172px}
+  .bracket{display:flex;align-items:stretch;gap:30px;min-width:1420px;padding:4px 2px}
+  .col{display:flex;flex-direction:column;justify-content:space-around;flex:1;gap:10px;min-width:158px}
+  .center-col{justify-content:center;gap:14px;min-width:186px}
+  .side-banner{
+    display:flex;justify-content:space-between;align-items:center;gap:12px;
+    max-width:none;margin:0 auto 4px;padding:0 2px;min-width:1420px;
+  }
+  .side-banner .lab{
+    font-family:"Arial Narrow","Roboto Condensed",sans-serif;font-weight:700;
+    text-transform:uppercase;letter-spacing:.09em;font-size:13px;color:var(--muted);
+  }
+  .side-banner .mid{
+    flex:1;text-align:center;font-size:11.5px;color:var(--faint);letter-spacing:.02em;
+    text-transform:none;font-weight:500;
+  }
   .col-title{
     font-family:"Arial Narrow","Roboto Condensed",sans-serif;font-weight:700;
     text-transform:uppercase;letter-spacing:.07em;font-size:12.5px;color:var(--muted);
@@ -266,14 +285,14 @@
   }
   .brow.win .bscore{color:var(--gold)}
   .bpen{font-size:10px;color:var(--faint);text-align:center;padding:3px 0 5px;letter-spacing:.05em}
-  /* connectors */
-  .col:not(.col-first) .bmatch::before{
-    content:"";position:absolute;left:-18px;top:50%;width:18px;height:2px;background:var(--line-strong);
+  /* connectors — mirrored: left side points right, right side points left, both toward the center */
+  .lcol .bmatch::after{
+    content:"";position:absolute;right:-16px;top:50%;width:16px;height:2px;background:var(--line-strong);
   }
-  .col:not(.col-last) .bmatch::after{
-    content:"";position:absolute;right:-18px;top:50%;width:18px;height:2px;background:var(--line-strong);
+  .rcol .bmatch::before{
+    content:"";position:absolute;left:-16px;top:50%;width:16px;height:2px;background:var(--line-strong);
   }
-  .bmatch.decided::after,.bmatch.decided.feedwin::before{background:var(--gold)}
+  .lcol .bmatch.decided::after,.rcol .bmatch.decided::before{background:var(--gold)}
 
   .final-wrap{display:flex;flex-direction:column;justify-content:center;gap:16px;min-width:200px}
   .trophy{text-align:center;font-size:34px;filter:drop-shadow(0 4px 10px rgba(0,0,0,.2))}
@@ -332,12 +351,15 @@
         <button id="view-lista" aria-pressed="true">Lista</button>
         <button id="view-chave" aria-pressed="false">Chave</button>
       </div>
+      <span class="saved-chip" id="saved-chip" role="status" aria-live="polite">✓ Salvo</span>
+      <button class="icon-btn" id="save-btn" title="Baixar uma cópia (backup)" aria-label="Baixar backup">💾</button>
+      <button class="icon-btn" id="open-btn" title="Abrir uma cópia salva" aria-label="Abrir backup">📂</button>
       <button class="icon-btn" id="theme-btn" title="Alternar tema" aria-label="Alternar tema">◐</button>
       <button class="icon-btn" id="reset-btn" title="Recomeçar" aria-label="Recomeçar">↺</button>
+      <input type="file" id="file-input" accept=".json,application/json" hidden>
     </div>
   </div>
   <div class="stage-strip" id="stage-strip"></div>
-  <div class="champ-line" id="champ-line"></div>
 </header>
 
 <main id="app"></main>
@@ -453,7 +475,15 @@ function load(){
     return s;
   }catch(e){ return freshState(); }
 }
-function save(){ try{ localStorage.setItem(LS_KEY, JSON.stringify(S)); }catch(e){} }
+let _savedTimer=null, _bootDone=false;
+function flashSaved(){
+  const chip=document.getElementById('saved-chip');
+  if(!chip||!_bootDone) return;
+  chip.classList.add('show');
+  clearTimeout(_savedTimer);
+  _savedTimer=setTimeout(()=>chip.classList.remove('show'),1400);
+}
+function save(){ try{ localStorage.setItem(LS_KEY, JSON.stringify(S)); flashSaved(); }catch(e){} }
 
 function keyOf(r,m,s){ return r+':'+m+':'+s; }
 function num(v){ return (v===''||v==null||isNaN(v))?null:parseInt(v,10); }
@@ -544,7 +574,6 @@ function render(){
   const P = recompute();
   save();
   renderStageStrip(P);
-  renderChampLine(P);
   document.getElementById('view-lista').setAttribute('aria-pressed', S.view==='lista');
   document.getElementById('view-chave').setAttribute('aria-pressed', S.view==='chave');
   if(S.view==='lista') renderLista(P); else renderChave(P);
@@ -567,24 +596,22 @@ function renderStageStrip(P){
   strip.innerHTML = html;
 }
 
-function renderChampLine(P){
-  const line=document.getElementById('champ-line');
+function champHtml(P){
   const champ = winnerOf(P,4,0);
   if(champ && present(champ)){
     const v=slotView(champ);
-    line.innerHTML = `<div class="champion">
+    return `<div class="champion">
       <div class="cf">${flagOf(v.code)||'🏆'}</div>
       <div class="ct"><div class="ck">🏆 Campeã do mundo</div><div class="cn">${esc(v.name)}</div></div>
     </div>`;
-  } else {
-    line.innerHTML='';
   }
+  return '';
 }
 
 /* ---- LISTA ---- */
 function renderLista(P){
   let active = ROUNDS.findIndex((r,i)=> roundDecided(P,i) < RN[i]);
-  let html='';
+  let html=champHtml(P);
 
   if(!S.noteHidden){
     html += `<div class="note">
@@ -729,26 +756,36 @@ function globalMatchNo(r,m){
 
 /* ---- CHAVE (bracket) ---- */
 function renderChave(P){
-  let html='<div class="bracket-scroll"><div class="bracket">';
-  ROUNDS.forEach((r,ri)=>{
-    const first = ri===0?'col-first':'';
-    const last = ri===4?'col-last':'';
-    html += `<div class="col ${first} ${last}">
-      <div class="col-title">${r.name}</div>`;
-    for(let m=0;m<RN[ri];m++){
-      html += bMatch(P,ri,m);
-    }
-    html += `</div>`;
-  });
-  // champion column
+  // Column for a round, only the matches in [from,to), with a side class.
+  function col(ri, from, to, side){
+    let h=`<div class="col ${side}"><div class="col-title">${ROUNDS[ri].name}</div>`;
+    for(let m=from;m<to;m++) h+=bMatch(P,ri,m);
+    return h+`</div>`;
+  }
+
+  // LEFT half → matches 0..metade (fluem para o centro, da esquerda p/ direita)
+  let left = col(0,0,8,'lcol') + col(1,0,4,'lcol') + col(2,0,2,'lcol') + col(3,0,1,'lcol');
+
+  // CENTER → final + troféu + campeã
   const champ=winnerOf(P,4,0);
   const cv = champ?slotView(champ):null;
-  html += `<div class="final-wrap col-last">
-    <div class="trophy">🏆</div>
-    ${cv?`<div class="bmatch final-match"><div class="brow win"><span class="flag">${flagOf(cv.code)||'🏆'}</span><span class="bn">${esc(cv.name)}</span></div></div>`
-        :`<div class="bmatch"><div class="brow placeholder"><span class="flag empty">○</span><span class="bn">Campeã</span></div></div>`}
-  </div>`;
-  html += '</div></div>';
+  let center = `<div class="col ccol center-col"><div class="col-title">Final</div>`
+    + bMatch(P,4,0)
+    + `<div class="trophy">🏆</div>`
+    + (cv
+        ? `<div class="bmatch final-match"><div class="brow win"><span class="flag">${flagOf(cv.code)||'🏆'}</span><span class="bn">${esc(cv.name)}</span></div></div>`
+        : `<div class="bmatch"><div class="brow placeholder"><span class="flag empty">○</span><span class="bn">Campeã</span></div></div>`)
+    + `</div>`;
+
+  // RIGHT half → matches metade..fim, colunas em espelho (semifinal junto ao centro)
+  let right = col(3,1,2,'rcol') + col(2,2,4,'rcol') + col(1,4,8,'rcol') + col(0,8,16,'rcol');
+
+  let html = champHtml(P) + `<div class="side-banner">
+      <span class="lab">◄ Lado esquerdo</span>
+      <span class="mid">Cada lado leva 1 finalista — os times de um mesmo lado só se enfrentam antes da final</span>
+      <span class="lab">Lado direito ►</span>
+    </div>
+    <div class="bracket-scroll"><div class="bracket">${left}${center}${right}</div></div>`;
 
   // third place under bracket
   const tp=thirdPlace(P);
@@ -850,6 +887,40 @@ document.getElementById('reset-btn').onclick=()=>{
   }
 };
 
+/* ---------- backup: baixar / abrir ---------- */
+document.getElementById('save-btn').onclick=()=>{
+  try{
+    const blob=new Blob([JSON.stringify(S,null,2)],{type:'application/json'});
+    const url=URL.createObjectURL(blob);
+    const a=document.createElement('a');
+    a.href=url; a.download='copa2026-minha-chave.json';
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(()=>URL.revokeObjectURL(url),1000);
+  }catch(e){ alert('Não consegui baixar a cópia neste navegador.'); }
+};
+document.getElementById('open-btn').onclick=()=>document.getElementById('file-input').click();
+document.getElementById('file-input').addEventListener('change', e=>{
+  const file=e.target.files&&e.target.files[0];
+  if(!file) return;
+  const reader=new FileReader();
+  reader.onload=()=>{
+    try{
+      const data=JSON.parse(reader.result);
+      if(!data || !Array.isArray(data.seeds) || data.seeds.length!==32) throw new Error('formato');
+      if(!confirm('Abrir esta cópia? Ela substitui o que está preenchido agora.')) return;
+      const theme=S.theme, view=S.view;
+      S=Object.assign(freshState(), data);
+      S.theme=theme; S.view=view;
+      save(); render();
+      alert('Cópia carregada! Seus jogos foram restaurados.');
+    }catch(err){
+      alert('Esse arquivo não parece ser uma cópia válida da chave.');
+    }
+  };
+  reader.readAsText(file);
+  e.target.value='';
+});
+
 /* ---------- picker ---------- */
 const overlay=document.getElementById('overlay');
 const pickerList=document.getElementById('picker-list');
@@ -904,6 +975,7 @@ overlay.addEventListener('click',e=>{ if(e.target===overlay) closePicker(); });
 /* ---------- boot ---------- */
 applyTheme();
 render();
+_bootDone=true;
 </script>
 
 </html>
