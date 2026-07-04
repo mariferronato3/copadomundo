@@ -432,12 +432,15 @@ const ROUNDS = [
 const RN = ROUNDS.map(r=>r.n);
 const EMPTY = {code:'',name:''};
 
-// 32 seed placeholders, arranged so each group winner meets a runner-up / third.
+// 32 vagas do 16-avos na ordem OFICIAL do chaveamento FIFA 2026.
+// 1X = 1º do grupo X · 2X = 2º do grupo X · 3XXXX = melhor 3º entre esses grupos.
 const SEED_LABELS = [
-  '1º A','2º B',  '1º C','2º D',  '1º E','2º F',  '1º G','2º H',
-  '1º I','2º J',  '1º K','2º L',  '2º A','1º B',  '2º C','1º D',
-  '3º · 1','1º F', '1º H','3º · 2', '3º · 3','1º J', '1º L','3º · 4',
-  '2º E','3º · 5', '3º · 6','2º G', '2º I','3º · 7', '3º · 8','2º K',
+  // LADO ESQUERDO — jogos 1 a 8 (de cima para baixo)
+  '1E','3ABCDF',  '1I','3CDFGH',  '2A','2B',  '1F','2C',
+  '2K','2L',  '1H','2J',  '1D','3BEFIJ',  '1G','3AEHIJ',
+  // LADO DIREITO — jogos 9 a 16 (de cima para baixo)
+  '1C','2F',  '2E','2I',  '1A','3CEFHI',  '1L','3EHIJK',
+  '1J','2H',  '2D','2G',  '1B','3EFGHI',  '1K','3DEIJL',
 ];
 
 /* ---------- datas oficiais (janelas FIFA 2026) — editáveis ---------- */
@@ -483,6 +486,8 @@ function load(){
     if(!s.seeds || s.seeds.length!==32) return freshState();
     s.scores=s.scores||{}; s.pens=s.pens||{}; s.dates=s.dates||{}; s.ident=s.ident||{};
     s.view=s.view||'lista';
+    // atualiza os rótulos das vagas para o chaveamento oficial (mantém times já escolhidos)
+    s.seeds = s.seeds.map((seed,i)=> Object.assign({}, seed, {label: SEED_LABELS[i]}));
     return s;
   }catch(e){ return freshState(); }
 }
