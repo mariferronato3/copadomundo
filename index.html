@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="description" content="Chave interativa da Copa do Mundo 2026 — preencha os placares do 16-avos à final, com datas e bandeiras. A chave avança sozinha.">
+<meta name="description" content="Chave interativa da Copa do Mundo 2026 — 16-avos preenchido com os classificados oficiais. Preencha os placares e a chave avança sozinha.">
 <meta name="theme-color" content="#0C1512">
 <title>Copa 2026 — Minha Chave</title>
 <style>
@@ -408,6 +408,7 @@ const COUNTRIES = [
   ["França","FR"],["Espanha","ES"],["Inglaterra","ENG"],["Portugal","PT"],["Alemanha","DE"],
   ["Itália","IT"],["Países Baixos","NL"],["Bélgica","BE"],["Croácia","HR"],["Suíça","CH"],
   ["Dinamarca","DK"],["Polônia","PL"],["Sérvia","RS"],["Áustria","AT"],["Ucrânia","UA"],
+  ["Bósnia e Herz.","BA"],
   ["Turquia","TR"],["Suécia","SE"],["Noruega","NO"],["Escócia","SCO"],["País de Gales","WAL"],
   ["Grécia","GR"],["Rep. Tcheca","CZ"],["Hungria","HU"],["Romênia","RO"],["Eslovênia","SI"],
   ["Eslováquia","SK"],["Estados Unidos","US"],["México","MX"],["Canadá","CA"],["Costa Rica","CR"],
@@ -443,6 +444,29 @@ const SEED_LABELS = [
   '1J','2H',  '2D','2G',  '1B','3EFGHI',  '1K','3DEIJL',
 ];
 
+// Seleções que de fato terminaram em cada vaga (fase de grupos da Copa 2026).
+// Fontes: Wikipedia (2026 FIFA World Cup knockout stage) + CBS Sports, confrontos cruzados.
+const SEED_TEAMS = [
+  // LADO ESQUERDO
+  {code:'DE',name:'Alemanha'},       {code:'PY',name:'Paraguai'},
+  {code:'FR',name:'França'},         {code:'SE',name:'Suécia'},
+  {code:'ZA',name:'África do Sul'},  {code:'CA',name:'Canadá'},
+  {code:'NL',name:'Países Baixos'},  {code:'MA',name:'Marrocos'},
+  {code:'PT',name:'Portugal'},       {code:'HR',name:'Croácia'},
+  {code:'ES',name:'Espanha'},        {code:'AT',name:'Áustria'},
+  {code:'US',name:'Estados Unidos'}, {code:'BA',name:'Bósnia e Herz.'},
+  {code:'BE',name:'Bélgica'},        {code:'SN',name:'Senegal'},
+  // LADO DIREITO
+  {code:'BR',name:'Brasil'},         {code:'JP',name:'Japão'},
+  {code:'CI',name:'Costa do Marfim'},{code:'NO',name:'Noruega'},
+  {code:'MX',name:'México'},         {code:'EC',name:'Equador'},
+  {code:'ENG',name:'Inglaterra'},    {code:'CD',name:'RD Congo'},
+  {code:'AR',name:'Argentina'},      {code:'CV',name:'Cabo Verde'},
+  {code:'AU',name:'Austrália'},      {code:'EG',name:'Egito'},
+  {code:'CH',name:'Suíça'},          {code:'DZ',name:'Argélia'},
+  {code:'CO',name:'Colômbia'},       {code:'GH',name:'Gana'},
+];
+
 /* ---------- datas oficiais (janelas FIFA 2026) — editáveis ---------- */
 const DATES = {
   '0:0':'2026-06-28','0:1':'2026-06-28','0:2':'2026-06-28',
@@ -474,7 +498,7 @@ let S = load();
 
 function freshState(){
   return {
-    seeds: SEED_LABELS.map(l=>({code:'',name:'',label:l})),
+    seeds: SEED_LABELS.map((l,i)=>({code:SEED_TEAMS[i].code, name:SEED_TEAMS[i].name, label:l})),
     scores:{}, pens:{}, dates:{}, ident:{}, view:'lista', theme:null, noteHidden:false,
   };
 }
@@ -486,8 +510,12 @@ function load(){
     if(!s.seeds || s.seeds.length!==32) return freshState();
     s.scores=s.scores||{}; s.pens=s.pens||{}; s.dates=s.dates||{}; s.ident=s.ident||{};
     s.view=s.view||'lista';
-    // atualiza os rótulos das vagas para o chaveamento oficial (mantém times já escolhidos)
-    s.seeds = s.seeds.map((seed,i)=> Object.assign({}, seed, {label: SEED_LABELS[i]}));
+    // atualiza rótulos e preenche as seleções oficiais nas vagas ainda vazias (mantém as que você já trocou)
+    s.seeds = s.seeds.map((seed,i)=>{
+      const out = Object.assign({}, seed, {label: SEED_LABELS[i]});
+      if(!out.code && SEED_TEAMS[i]){ out.code=SEED_TEAMS[i].code; out.name=SEED_TEAMS[i].name; }
+      return out;
+    });
     return s;
   }catch(e){ return freshState(); }
 }
@@ -649,7 +677,7 @@ function renderLista(P){
   if(!S.noteHidden){
     html += `<div class="note">
       <span>ℹ️</span>
-      <div><b>Ajuste os times do 16-avos:</b> toque em qualquer seleção para escolher o país (com bandeira). Depois é só preencher os placares — o vencedor avança sozinho para a próxima fase. Em caso de empate, aparecem os pênaltis.</div>
+      <div><b>Times do 16-avos já preenchidos</b> com os classificados oficiais da Copa 2026. Agora é só preencher os placares — o vencedor avança sozinho para a próxima fase. Em caso de empate, aparecem os pênaltis. Quer trocar alguém? É só tocar na seleção.</div>
       <button class="x" id="note-x" aria-label="Fechar aviso">×</button>
     </div>`;
   }
